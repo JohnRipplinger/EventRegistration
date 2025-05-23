@@ -1,0 +1,24 @@
+<!-- filepath: c:\Users\John\projects\EventRegistration\app\templates\registrations.html -->
+{% extends "base.html" %}
+{% block title %}Registrations{% endblock %}
+{% block content %}
+  <h2>Event Registrations</h2>
+  {% for event in events %}
+    <div class="card mb-4">
+      <div class="card-header">
+        <strong>{{ event.name }}</strong> ({{ event.date.strftime('%Y-%m-%d') }}, {{ event.location }})
+      </div>
+      <div class="card-body">
+        {% if event.registrations %}
+          <ul>
+            {% for reg in event.registrations %}
+              <li>{{ reg.user.username }} ({{ reg.user.email }})</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <em>No users registered for this event.</em>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+{% endblock %}

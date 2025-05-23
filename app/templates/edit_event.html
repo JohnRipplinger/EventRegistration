@@ -1,0 +1,25 @@
+<!-- filepath: c:\Users\John\projects\EventRegistration\app\templates\edit_event.html -->
+{% extends "base.html" %}
+{% block title %}Edit Event{% endblock %}
+{% block content %}
+<h2>Edit Event</h2>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div class="mb-3" style="max-width: 300px;">
+        {{ form.name.label(class="form-label") }}
+        {{ form.name(class="form-control") }}
+    </div>
+    <div class="mb-3" style="max-width: 300px;">
+        {{ form.date.label(class="form-label") }}
+        {{ form.date(class="form-control") }}
+    </div>
+    <div class="mb-3" style="max-width: 300px;">
+        {{ form.location.label(class="form-label") }}
+        {{ form.location(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.submit(class="btn btn-primary") }}
+        <a href="{{ url_for('events') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}
