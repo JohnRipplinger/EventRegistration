@@ -35,6 +35,15 @@
         {{ add_user_form.username.label(class="form-label") }}
         {{ add_user_form.username(class="form-control") }}
     </div>
+    <!-- Place this inside your form, above the email input -->
+    {% if add_user_form.email.errors %}
+    <div class="alert alert-warning" role="alert">
+        {% for error in add_user_form.email.errors %}
+        {{ error }}
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="mb-3" style="max-width: 300px;">
         {{ add_user_form.email.label(class="form-label") }}
         {{ add_user_form.email(class="form-control") }}
