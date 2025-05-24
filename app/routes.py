@@ -2,7 +2,6 @@ from flask import render_template, redirect, url_for, flash, session, request, g
 from app import app, db
 from app.models import User, Event, Registration
 from app.forms import LoginForm, AddUserForm, EventForm, EditEventForm
-from flask_bootstrap import Bootstrap
 
 
 @app.before_request
