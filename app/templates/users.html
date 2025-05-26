@@ -7,6 +7,7 @@
         <tr>
             <th>Username</th>
             <th>Email</th>
+            <th>Admin</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -15,6 +16,13 @@
         <tr>
             <td>{{ user.username }}</td>
             <td>{{ user.email }}</td>
+            <td>
+                {% if user.is_admin %}
+                    <span class="badge bg-success">Yes</span>
+                {% else %}
+                    <span class="badge bg-secondary">No</span>
+                {% endif %}
+            </td>
             <td>
                 <form method="GET" action="{{ url_for('edit_user', user_id=user.id) }}" style="display:inline;">
                     <button type="submit" class="btn btn-warning btn-sm">Edit</button>
@@ -35,7 +43,7 @@
         {{ add_user_form.username.label(class="form-label") }}
         {{ add_user_form.username(class="form-control") }}
     </div>
-    <!-- Place this inside your form, above the email input -->
+    
     {% if add_user_form.email.errors %}
     <div class="alert alert-warning" role="alert">
         {% for error in add_user_form.email.errors %}
@@ -48,6 +56,12 @@
         {{ add_user_form.email.label(class="form-label") }}
         {{ add_user_form.email(class="form-control") }}
     </div>
+
+    <div class="mb-3" style="max-width: 300px;">
+        {{ add_user_form.is_admin.label(class="form-label") }}
+        {{ add_user_form.is_admin(class="form-check-input") }}
+    </div>
+
     <div class="mb-3">
         {{ add_user_form.submit(class="btn btn-primary") }}
     </div>

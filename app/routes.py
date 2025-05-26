@@ -51,7 +51,7 @@ def users():
         if User.query.filter_by(username=username).first():
             flash('Username already exists.', 'danger')
         else:
-            user = User(username=username, email=f"{username}@example.com")
+            user = User(username=username, email=add_user_form.email.data or f"{username}@example.com", is_admin=add_user_form.is_admin.data)
             db.session.add(user)
             db.session.commit()
             flash('User added!', 'success')
@@ -83,6 +83,9 @@ def edit_user(user_id):
         else:
             user.username = form.username.data
             user.email = form.email.data
+            user.is_admin = form.is_admin.data
+            if form.is_admin.data and not user.is_admin:
+                flash('User promoted to admin.', 'success')
             db.session.commit()
             flash('User updated!', 'success')
             return redirect(url_for('users'))
@@ -133,7 +136,10 @@ def dashboard():
         flash('Please log in to access the dashboard.', 'warning')
         return redirect(url_for('login'))
     events = Event.query.all()
-    user_registrations = {reg.event_id for reg in g.user.registrations}
+    for event in events:
+        event.attendee_count = len(event.registrations.all())  # Convert to list
+    #user_registrations = {reg.event_id for reg in g.user.registrations}
+    user_registrations = {reg.event for reg in g.user.registrations}
     return render_template('dashboard.html', user=g.user, events=events, user_registrations=user_registrations)
 
 @app.route('/register_event/<int:event_id>', methods=['POST'])
@@ -163,6 +169,9 @@ def unregister_event(event_id):
 @app.route('/registrations')
 def registrations():
     events = Event.query.all()
+    for event in events:
+        event.attendee_count = len(event.registrations.all())  # Convert to list
+
     return render_template('registrations.html', events=events)
 
 @app.route('/schema')
@@ -197,3 +206,34 @@ def schema():
             'relationships': rels
         })
     return render_template('schema.html', schema_info=schema_info)
+
+from flask import request, render_template
+from app import app, db
+from app.models import Event
+
+@app.route('/search_events', methods=['GET'])
+def search_events():
+    search_query = request.args.get('search', '')
+    date_range = request.args.get('date', '')
+    category = request.args.get('categories', '')
+
+    # Start with all events
+    filtered_events = Event.query
+
+    # Apply search filter
+    if search_query:
+        filtered_events = filtered_events.filter(Event.name.ilike(f'%{search_query}%'))
+
+    # Apply date filter
+    if date_range:
+        filtered_events = filtered_events.filter(Event.date == date_range)
+
+    # Apply category filter
+    if category:
+        filtered_events = filtered_events.filter(Event.category == category)
+
+    events = filtered_events.all()
+    for event in events:
+        event.attendee_count = len(event.registrations.all())
+
+    return render_template('dashboard.html', user=g.user, events=events)

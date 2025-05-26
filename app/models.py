@@ -5,10 +5,11 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    is_admin = db.Column(db.Boolean, default=False, nullable=False)  # New property
     registrations = db.relationship('Registration', back_populates='user', cascade='all, delete-orphan', lazy='dynamic')
 
     def __repr__(self):
-        return f'<User {self.username}>'
+        return f'<User {self.username}, Admin: {self.is_admin}>'
 
     def is_registered_for(self, event_id):
         return self.registrations.filter_by(event_id=event_id).first() is not None

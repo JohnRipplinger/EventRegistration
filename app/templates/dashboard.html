@@ -2,38 +2,99 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-  <h2>Welcome, {{ user.username }}!</h2>
-  <p>Email: {{ user.email }}</p>
-  <hr>
-  <h3>Available Events</h3>
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Date</th>
-        <th>Location</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for event in events %}
-      <tr>
-        <td>{{ event.name }}</td>
-        <td>{{ event.date.strftime('%Y-%m-%d') }}</td>
-        <td>{{ event.location }}</td>
-        <td>
-          {% if event.id in user_registrations %}
-            <form method="POST" action="{{ url_for('unregister_event', event_id=event.id) }}" style="display:inline;">
-              <button type="submit" class="btn btn-danger btn-sm">Unregister</button>
+<div class="container">
+    <div class="row">
+        <!-- Left Column: User's Registered Events -->
+        <div class="col-md-6">
+            <h2>Registered Events</h2>
+            {% if user_registrations and user_registrations|length > 0 %}
+                <div class="list-group">
+                    {% for event in user_registrations %}
+                    <div class="list-group-item">
+                        <h5 class="mb-1">{{ event.name }}</h5>
+                        <p class="mb-1"><strong>Date:</strong> {{ event.date.strftime('%B %d, %Y') }}</p>
+                        <p class="mb-1"><strong>Location:</strong> {{ event.location }}</p>
+                        <form method="POST" action="{{ url_for('unregister_event', event_id=event.id) }}" class="mt-2">
+                            <button type="submit" class="btn btn-danger btn-sm">Unregister</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p><em>You are not registered for any events.</em></p>
+            {% endif %}
+        </div>
+
+        <!-- Right Column: Filters & Available Events -->
+        <div class="col-md-6">
+            <h2>Filters</h2>
+            <form method="GET" action="{{ url_for('search_events') }}">
+                <div class="form-group">
+                    <label for="search">Search Events</label>
+                    <input type="text" class="form-control" id="search" name="search">
+                </div>
+                <div class="form-group">
+                    <label for="date">Date Range</label>
+                    <input type="date" class="form-control" id="date" name="date">
+                </div>
+                <div class="form-group">
+                    <label for="categories">Category</label>
+                    <select class="form-control" id="categories" name="categories">
+                        <option value="">Select category</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="seminar">Seminar</option>
+                        <option value="networking">Networking</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Search</button>
             </form>
-          {% else %}
-            <form method="POST" action="{{ url_for('register_event', event_id=event.id) }}" style="display:inline;">
-              <button type="submit" class="btn btn-success btn-sm">Register</button>
-            </form>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+
+            <h3>Available Events</h3>
+            <div class="row">
+                {% for event in events %}
+                <div class="col-md-12">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ event.name }}</h5>
+                            <p class="card-text"><strong>Date:</strong> {{ event.date.strftime('%B %d, %Y') }}</p>
+                            <p class="card-text"><strong>Location:</strong> {{ event.location }}</p>
+                            <span class="badge bg-primary">{{ event.attendee_count }} Attendees</span>
+                            <button class="btn btn-info btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#eventModal{{ event.id }}">
+                                View Details
+                            </button>
+                            <form method="POST" action="{{ url_for('register_event', event_id=event.id) }}" class="mt-2">
+                                <button type="submit" class="btn btn-success btn-sm">Register</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Event Details -->
+{% for event in events %}
+<div class="modal fade" id="eventModal{{ event.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ event.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Date & Time:</strong> {{ event.date.strftime('%B %d, %Y') }}</p>
+                <p><strong>Location:</strong> {{ event.location }}</p>
+                <p><strong>Registered Attendees:</strong></p>
+                <ul class="list-group">
+                    {% for reg in event.registrations %}
+                    <li class="list-group-item">{{ reg.user.username }} ({{ reg.user.email }})</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
 {% endblock %}

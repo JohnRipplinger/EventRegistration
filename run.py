@@ -8,10 +8,10 @@ def seed_db():
 
     from datetime import date
     users = [
-        User(username='admin', email='admin@example.com'),
-        User(username='alice', email='alice@example.com'),
-        User(username='bob', email='bob@example.com'),
-        User(username='carol', email='carol@example.com'),
+        User(username='admin', email='admin@example.com', is_admin=True),
+        User(username='alice', email='alice@example.com', is_admin=False),
+        User(username='bob', email='bob@example.com', is_admin=False),
+        User(username='carol', email='carol@example.com', is_admin=False),
     ]
     db.session.add_all(users)
     db.session.commit()
