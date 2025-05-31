@@ -6,13 +6,13 @@ git clone <repository_url>
 cd <project_directory>
 
 - Create a virtual environment:
-python -m venv my_venv
+python -m venv venv
 
 - Activate the virtual environment:
 - On Windows:
-my_venv\Scripts\activate
+venv\Scripts\activate
 - On Mac/Linux:
-source my_venv/bin/activate
+source venv/bin/activate
 
 - Upgrade pip (important to avoid outdated package issues):
 python -m pip install --upgrade pip
