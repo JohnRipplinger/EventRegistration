@@ -1,14 +1,25 @@
 # EventRegistration
 Example Event Registration Flask Project
 
-1. Clone or Fork the project
+- Clone the repository 
+git clone <repository_url>
+cd <project_directory>
 
-2. Ensure you have Python and pip installed – You can check by running:
-python --version
-pip --version
+- Create a virtual environment:
+python -m venv my_venv
 
-3. Navigate to the directory where your requirements.txt file is located using
-cd path/to/your/project
+- Activate the virtual environment:
+- On Windows:
+my_venv\Scripts\activate
+- On Mac/Linux:
+source my_venv/bin/activate
 
-4. Run the installation command:
+- Upgrade pip (important to avoid outdated package issues):
+python -m pip install --upgrade pip
+
+- Install dependencies:
 pip install -r requirements.txt
+
+- Deactivate the virtual environment (when done):
+deactivate
+
