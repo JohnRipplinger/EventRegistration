@@ -1,48 +1,36 @@
-from flask import render_template, redirect, url_for, flash, session, request, g
+from flask import render_template, redirect, url_for, flash, session, request
 from app import app, db
 from app.models import User, Event, Registration
 from app.forms import LoginForm, AddUserForm, EventForm, EditEventForm
+from flask_login import login_user, logout_user, login_required, current_user
 
-
-@app.before_request
-def load_logged_in_user():
-    user_id = session.get('user_id')
-    if user_id is None:
-        g.user = None
-    else:
-        g.user = User.query.get(user_id)
-        
-@app.context_processor
-def inject_user():
-    return dict(current_user=g.user)
-        
 @app.route('/')
 def home():
-    #return render_template('index.html')
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-    if form.validate_on_submit():
-        username = form.username.data
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        if user:
-            session['user_id'] = user.id
-            flash('Logged in successfully!', 'success')
-            return redirect(url_for('dashboard'))  # Change to user dashboard
-        else:
-            flash('Username not found.', 'danger')
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('dashboard'))
+        flash('Invalid credentials', 'danger')
     return render_template('login.html', form=form)
 
 
 @app.route('/logout')
+@login_required
 def logout():
-    session.clear()
-    flash('You have been logged out.', 'info')
+    logout_user()
+    flash('Logged out.', 'info')
     return redirect(url_for('login'))
 
 @app.route('/users', methods=['GET', 'POST'])
+@login_required
 def users():
     users = User.query.all()
     add_user_form = AddUserForm()
@@ -59,6 +47,7 @@ def users():
     return render_template('users.html', users=users, add_user_form=add_user_form)
 
 @app.route('/delete_user/<int:user_id>', methods=['POST'])
+@login_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
     db.session.delete(user)
@@ -69,11 +58,11 @@ def delete_user(user_id):
 from app.forms import EditUserForm
 
 @app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
+@login_required
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
     form = EditUserForm(obj=user)
     if form.validate_on_submit():
-        # Check for unique username/email if needed
         existing_user = User.query.filter(User.username == form.username.data, User.id != user.id).first()
         existing_email = User.query.filter(User.email == form.email.data, User.id != user.id).first()
         if existing_user:
@@ -92,6 +81,7 @@ def edit_user(user_id):
     return render_template('edit_user.html', form=form, user=user)
 
 @app.route('/events', methods=['GET', 'POST'])
+@login_required
 def events():
     events = Event.query.all()
     event_form = EventForm()
@@ -108,6 +98,7 @@ def events():
     return render_template('events.html', events=events, event_form=event_form)
 
 @app.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
+@login_required
 def edit_event(event_id):
     event = Event.query.get_or_404(event_id)
     form = EditEventForm(obj=event)
@@ -121,6 +112,7 @@ def edit_event(event_id):
     return render_template('edit_event.html', form=form, event=event)
 
 @app.route('/delete_event/<int:event_id>', methods=['POST'])
+@login_required
 def delete_event(event_id):
     event = Event.query.get_or_404(event_id)
     db.session.delete(event)
@@ -128,38 +120,35 @@ def delete_event(event_id):
     flash('Event deleted.', 'info')
     return redirect(url_for('events'))
 
-from app.models import Registration, Event
-
 @app.route('/dashboard')
+@login_required
 def dashboard():
-    if not g.user:
-        flash('Please log in to access the dashboard.', 'warning')
-        return redirect(url_for('login'))
     events = Event.query.all()
     for event in events:
-        event.attendee_count = len(event.registrations.all())  # Convert to list
-    #user_registrations = {reg.event_id for reg in g.user.registrations}
-    user_registrations = {reg.event for reg in g.user.registrations}
-    return render_template('dashboard.html', user=g.user, events=events, user_registrations=user_registrations)
+        event.attendee_count = len(event.registrations.all())
+    user_registrations = [reg.event for reg in current_user.registrations]
+    return render_template('dashboard.html', user=current_user, events=events, user_registrations=user_registrations)
 
 @app.route('/register_event/<int:event_id>', methods=['POST'])
+@login_required
 def register_event(event_id):
-    if not g.user:
+    if not current_user.is_authenticated:
         flash('Please log in.', 'warning')
         return redirect(url_for('login'))
-    if not Registration.query.filter_by(user_id=g.user.id, event_id=event_id).first():
-        reg = Registration(user_id=g.user.id, event_id=event_id)
+    if not Registration.query.filter_by(user_id=current_user.id, event_id=event_id).first():
+        reg = Registration(user_id=current_user.id, event_id=event_id)
         db.session.add(reg)
         db.session.commit()
         flash('Registered for event!', 'success')
     return redirect(url_for('dashboard'))
 
 @app.route('/unregister_event/<int:event_id>', methods=['POST'])
+@login_required
 def unregister_event(event_id):
-    if not g.user:
+    if not current_user.is_authenticated:
         flash('Please log in.', 'warning')
         return redirect(url_for('login'))
-    reg = Registration.query.filter_by(user_id=g.user.id, event_id=event_id).first()
+    reg = Registration.query.filter_by(user_id=current_user.id, event_id=event_id).first()
     if reg:
         db.session.delete(reg)
         db.session.commit()
@@ -167,21 +156,19 @@ def unregister_event(event_id):
     return redirect(url_for('dashboard'))
 
 @app.route('/registrations')
+@login_required
 def registrations():
     events = Event.query.all()
     for event in events:
-        event.attendee_count = len(event.registrations.all())  # Convert to list
-
+        event.attendee_count = len(event.registrations.all())
     return render_template('registrations.html', events=events)
 
 @app.route('/schema')
+@login_required
 def schema():
-    # Import models here to ensure latest definitions are used
     from app.models import User, Event, Registration
-
     models = [User, Event, Registration]
     schema_info = []
-
     for model in models:
         columns = []
         for col in model.__table__.columns:
@@ -192,7 +179,6 @@ def schema():
                 'nullable': col.nullable,
                 'unique': col.unique,
             })
-        # Gather relationships for this model
         rels = []
         for rel in model.__mapper__.relationships:
             rels.append({
@@ -207,33 +193,25 @@ def schema():
         })
     return render_template('schema.html', schema_info=schema_info)
 
-from flask import request, render_template
-from app import app, db
-from app.models import Event
-
 @app.route('/search_events', methods=['GET'])
+@login_required
 def search_events():
     search_query = request.args.get('search', '')
     date_range = request.args.get('date', '')
     category = request.args.get('categories', '')
 
-    # Start with all events
     filtered_events = Event.query
 
-    # Apply search filter
     if search_query:
         filtered_events = filtered_events.filter(Event.name.ilike(f'%{search_query}%'))
-
-    # Apply date filter
     if date_range:
         filtered_events = filtered_events.filter(Event.date == date_range)
-
-    # Apply category filter
-    if category:
+    if category and hasattr(Event, 'category'):
         filtered_events = filtered_events.filter(Event.category == category)
 
     events = filtered_events.all()
     for event in events:
         event.attendee_count = len(event.registrations.all())
 
-    return render_template('dashboard.html', user=g.user, events=events)
+    user_registrations = [reg.event for reg in current_user.registrations]
+    return render_template('dashboard.html', user=current_user, events=events, user_registrations=user_registrations)
