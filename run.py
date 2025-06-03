@@ -13,6 +13,12 @@ def seed_db():
         User(username='bob', email='bob@example.com', is_admin=False),
         User(username='carol', email='carol@example.com', is_admin=False),
     ]
+    # Set passwords for each user
+    users[0].set_password('adminpass')
+    users[1].set_password('alicepass')
+    users[2].set_password('bobpass')
+    users[3].set_password('carolpass')
+
     db.session.add_all(users)
     db.session.commit()
 
