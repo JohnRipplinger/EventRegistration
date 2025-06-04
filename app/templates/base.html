@@ -18,6 +18,7 @@
       <li class="nav-item"><a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a></li>
       <li class="nav-item"><a class="nav-link {% if request.endpoint == 'users' %}active{% endif %}" href="{{ url_for('users') }}">Users</a></li>
       <li class="nav-item"><a class="nav-link {% if request.endpoint == 'events' %}active{% endif %}" href="{{ url_for('events') }}">Events</a></li>
+      <li class="nav-item"><a class="nav-link {% if request.endpoint == 'events' %}active{% endif %}" href="{{ url_for('events_calendar') }}">Events Calendar</a></li>
       <li class="nav-item"><a class="nav-link {% if request.endpoint == 'registrations' %}active{% endif %}" href="{{ url_for('registrations') }}">Registrations</a></li>
       <li class="nav-item"><a class="nav-link {% if request.endpoint == 'schema' %}active{% endif %}" href="{{ url_for('schema') }}">Schema</a></li>
     {% else %}

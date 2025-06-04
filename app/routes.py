@@ -120,6 +120,12 @@ def delete_event(event_id):
     flash('Event deleted.', 'info')
     return redirect(url_for('events'))
 
+@app.route('/events_calendar')
+@login_required
+def events_calendar():
+    events = Event.query.all()
+    return render_template('events_calendar.html', events=events)
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
